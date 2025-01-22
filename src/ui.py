@@ -10,12 +10,12 @@ def drawLines(height : int)->None:
 
 def render(buffer : str,width : int, height : int,cursorX : int, cursorY : int)->None:
     s = ""
-    lines = buffer.split("\n")
-    numberOfLinesToRender = min(len(lines),height)
+
+    numberOfLinesToRender = min(len(buffer),height)
     offsetX = 9
     offsetY = 2
     
     for i in range(numberOfLinesToRender):
-        blank = " "*(width-len(lines[i])-offsetX)
-        s += f"\033[{i+offsetY};{offsetX}f{lines[i]}{blank}"
+        blank = " "*(width-len(buffer[i])-offsetX)
+        s += f"\033[{i+offsetY};{offsetX}f{buffer[i]}{blank}"
     print(f"{s}\033[{cursorY+offsetY};{cursorX+offsetX}f",end="",flush=True)
