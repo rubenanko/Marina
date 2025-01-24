@@ -2,6 +2,8 @@ import sys
 import abstract
 import ui
 
+API_KEY = None
+
 def main(argv : list):
     filename = argv[1]
     size = abstract.getConsoleSize()
