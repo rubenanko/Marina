@@ -16,6 +16,9 @@ def render(buffer : str,width : int, height : int,cursorX : int, cursorY : int)-
     offsetY = 2
     
     for i in range(numberOfLinesToRender):
-        blank = " "*(width-len(buffer[i])-offsetX)
+        blank = " "*max(0,(width-len(buffer[i])-offsetX))
         s += f"\033[{i+offsetY};{offsetX}f{buffer[i]}{blank}"
-    print(f"{s}\033[{cursorY+offsetY};{cursorX+offsetX}f",end="",flush=True)
+
+    for i in range(numberOfLinesToRender,height+1):
+        s+= " "*(width-offsetX)
+    print(f"{s}\033[{cursorY};{cursorX+offsetX}f",end="",flush=True)

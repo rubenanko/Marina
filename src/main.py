@@ -1,8 +1,92 @@
 import sys
 import abstract
 import ui
+from openai import OpenAI
+# import configparser
 
-API_KEY = None
+CONFIG_MODE = 0
+EDITING_MODE = 1
+ASKING_MODE = 2
+
+INPUT_LABEL = ["\033[1;30mConfig : \033[0;0m",
+               "\033[1;36mEdit : \033[0;0m",
+               "\033[1;31mAsk : \033[0;0m"]
+
+EDITING_PREPROMPT = "You are a programmer, i will submit raw code and instructions and you will respond with the raw code only. Assume that every request are modifications or additions to the given code. No quotation marks before the code, just the raw code. Respond with the whole code only. You must not add additionnal comments or characters to delimit the code."
+ASKING_PREPROMPT = "You are a helpful code assistant, i will ask you questions."
+
+
+
+class State:
+    def __init__(self,filename : str = None):
+        self.run = True
+        self.config = None
+        self.mode = CONFIG_MODE
+        self.client = OpenAI(api_key="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")
+
+        self.askMessages = [{"role": "system", "content": ASKING_PREPROMPT}]
+        self.editMessages =  [{"role": "system", "content": EDITING_PREPROMPT}]
+
+        if filename == None:
+            open("new file","w+").close()
+            self.filename = "new file"
+            self.file = open("new file","r+")
+        else:
+            self.filename = filename
+            self.file = open(filename,"r+")
+
+        self.rawBuffer = self.file.read()
+        self.buffer = self.rawBuffer.split("\n")
+
+    def close(self)->None:
+        self.file.close()
+
+    def setFile(self,filename : str)->None:
+        self.file.close()
+        self.file = open(filename,"r+")
+
+    def handle(self,userInput : str)->None:
+        if userInput == "exit": self.run = False
+
+        elif userInput == "save":   
+            self.file.seek(0)
+            self.file.write(self.rawBuffer)
+
+        elif userInput == "config":
+            self.mode = CONFIG_MODE
+
+        elif userInput == "edit":
+            self.mode = EDITING_MODE  
+
+        elif userInput == "ask":
+            self.mode = ASKING_MODE  
+
+        elif self.mode == EDITING_MODE:
+            prompt = "name of the file : " + self.filename + "\ncontent : " + self.rawBuffer + "\nrequest : " + userInput
+            self.editMessages.append({"role":"user","content":prompt})
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=self.editMessages
+            )
+
+            self.editMessages.append(response.choices[0].message)
+            self.rawBuffer = response.choices[0].message.content
+            self.buffer = self.rawBuffer.split("\n")
+
+        elif self.mode == ASKING_MODE:
+            prompt = "name of the file : " + self.filename + "\ncontent : " + self.rawBuffer + "\nrequest : " + userInput
+            self.askMessages.append({"role":"user","content":prompt})
+
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=self.askMessages
+            )
+
+            self.askMessages.append(response.choices[0].message)
+            self.rawBuffer = response.choices[0].message.content
+            self.buffer = self.rawBuffer.split("\n")
+
 
 def main(argv : list):
     filename = argv[1]
@@ -13,20 +97,21 @@ def main(argv : list):
     ui.drawFilename(filename,size.columns)
     ui.drawLines(size.lines-2)
 
-    f = open(filename,"r+")
-    buffer = f.read().split("\n")
-    f.close()
+    state = State(filename)
 
-    ui.render(buffer,size.columns-1,size.lines-2,0,size.lines-1)
+    ui.render(state.buffer,size.columns-1,size.lines-3,0,size.lines-1)
 
-    run = True
-    while run:
-        tmp,size = size,abstract.getConsoleSize()
-        if tmp.lines != size.lines or tmp.columns != size.columns:
-            ui.drawFilename(filename,size.columns)
-            ui.drawLines(size.lines-2)            
-            ui.render(buffer,size.columns,size.lines-2,0,size.lines-1)
-        input("\033[1;36mMarina : \033[0;0m")
+    while state.run:
+        size = abstract.getConsoleSize()
+        ui.drawFilename(filename,size.columns)
+        ui.drawLines(size.lines-2)            
+        ui.render(state.buffer,size.columns,size.lines-3,0,size.lines-1)
+        userInput = input(INPUT_LABEL[state.mode])
+        state.handle(userInput)
+        
+    state.close()    
+    abstract.clear()
+
 
 if __name__ == "__main__":
     main(sys.argv)
