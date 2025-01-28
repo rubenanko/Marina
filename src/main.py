@@ -76,10 +76,10 @@ class State:
             # self.offsetY = int(userInput)
             intUserInput = int(userInput)
             if not userInput[0].isdigit():
-                newOffset = self.offsetY + int(userInput)
+                newOffset = self.offsetY + intUserInput
                 if newOffset >=0 and newOffset < len(self.buffer):  self.offsetY = newOffset
-            elif self.offsetY >= 0 and self.offsetY < len(self.buffer):
-                self.offsetY = int(userInput)
+            elif intUserInput > 0 and intUserInput <= len(self.buffer):
+                self.offsetY = intUserInput - 1
 
         elif self.mode == EDITING_MODE:
             prompt = "name of the file : " + self.filename + "\ncontent : " + self.rawBuffer + "\nrequest : " + userInput
@@ -119,9 +119,9 @@ def main(argv : list):
 
     while state.run:
         size = abstract.getConsoleSize()
-        ui.drawFilename(filename,size.columns)
-        ui.drawLines(min(size.lines-2,len(state.buffer)),state.offsetY)            
-        ui.render(state.displayBuffer,size.columns,size.lines-3,0,size.lines-1,state.offsetY)
+        ui.drawHeader(state,size.columns)
+        ui.render(state.displayBuffer,size.columns,size.lines-3,state.offsetY)
+        ui.drawLines(min(size.lines-3,len(state.buffer)-state.offsetY),state.offsetY,0,size.lines-1)            
         userInput = input(INPUT_LABEL[state.mode])
         state.handle(userInput)
         

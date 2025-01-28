@@ -1,23 +1,27 @@
-def drawFilename(filename : str,width : int)->None:
-    print(f"\033[1;1f\033[7;34m{filename}\033[0;0m",end=" "*(width-len(filename)))
+def drawHeader(state,width)->None:
+    print(f"\033[1;1f\033[7;34m{state.filename} | {len(state.buffer)} lines\033[0;0m",end=" "*(width-len(state.filename)-9-len(str(len(state.buffer)))))
 
-def drawLines(height : int,displayOffsetY : int)->None:
+def drawLines(height : int,displayOffsetY : int,cursorX : int, cursorY : int)->None:
     s = "\033[2;1f"
     offsetX = 7
     offsetY = 2
-    for i in range(height):  s += f"\033[{i+offsetY};1f\033[1;33m{i+1} \033[{i+offsetY};{offsetX}f\033[0;34m~\033[0;0m"
-    print(s,end="")
+    for i in range(height): 
+        blank = " "*(6-len(str(i+1+displayOffsetY)))
+        s += f"\033[{i+offsetY};1f\033[1;33m{i+1+displayOffsetY}{blank}\033[{i+offsetY};{offsetX}f\033[0;34m~ \033[0;0m"
 
-def render(buffer : str,width : int, height : int,cursorX : int, cursorY : int, displayOffsetY : int)->None:
+    print(f"{s}\033[{cursorY};{cursorX+9}f",end="")
+
+
+def render(buffer : str,width : int, height : int, displayOffsetY : int)->None:
     s = ""
-    numberOfLinesToRender = min(len(buffer),height)
+    numberOfLinesToRender = min(len(buffer)-displayOffsetY,height)
     offsetX = 9
     offsetY = 2
     
-    for i in range(displayOffsetY,numberOfLinesToRender):
-        blank = " "*max(0,(width-len(buffer[i])-offsetX))
-        s += f"\033[{i+offsetY};{offsetX}f{buffer[i]}{blank}"
+    for i in range(numberOfLinesToRender):
+        blank = " "*max(0,(width-len(buffer[i+displayOffsetY])-offsetX))
+        s += f"\033[{i+offsetY};{offsetX}f{buffer[i+displayOffsetY]}{blank}"
 
     for i in range(numberOfLinesToRender,height+2):
         s+= " "*(width-offsetX)
-    print(f"{s}\033[{cursorY};{cursorX+offsetX}f",end="",flush=True)
+    print(s,end="",flush=True)
