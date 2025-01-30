@@ -1,7 +1,9 @@
 import sys
+import time
+from openai import OpenAI
+
 import abstract
 import ui
-from openai import OpenAI
 # import configparser
 
 CONFIG_MODE = 0
@@ -27,6 +29,8 @@ class State:
         self.askMessages = [{"role": "system", "content": ASKING_PREPROMPT}]
         self.editMessages =  [{"role": "system", "content": EDITING_PREPROMPT}]
 
+        self.lastPrompt = None
+
         if filename == None:
             open("new file","w+").close()
             self.filename = "new file"
@@ -46,21 +50,16 @@ class State:
         self.file.close()
         self.file = open(filename,"r+")
 
-    def handle(self,userInput : str)->None:
+    def update(self,userInput : str)->None:
         if userInput == "exit": self.run = False
-
-        elif userInput == "save":   
-            self.file.seek(0)
-            self.file.write(self.rawBuffer)
     
         elif userInput == "save":
             if self.mode == EDITING_MODE:
                 self.file.seek(0)
                 self.file.write(self.rawBuffer)       
-            elif self.mode == ASKING_MODE:
-                with open("marina_logs.txt","w+") as f:
-                    f.seek(0,2)
-                    f.writelines(self.displayBuffer)
+            elif self.mode == ASKING_MODE and self.lastPrompt != None:
+                with open("marina_logs.txt","a") as f:
+                    f.write("-"*15 + "\ndate : " + time.asctime() + "\n" + self.lastPrompt + "\n\n" + "\n".join(self.displayBuffer) + "-"*15)
 
         elif userInput == "config":
             self.mode = CONFIG_MODE
@@ -97,6 +96,7 @@ class State:
 
         elif self.mode == ASKING_MODE:
             prompt = "name of the file : " + self.filename + "\ncontent : " + self.rawBuffer + "\nrequest : " + userInput
+            self.lastPrompt = prompt
             self.askMessages.append({"role":"user","content":prompt})
 
             response = self.client.chat.completions.create(
@@ -123,7 +123,7 @@ def main(argv : list):
         ui.render(state.displayBuffer,size.columns,size.lines-3,state.offsetY)
         ui.drawLines(min(size.lines-3,len(state.buffer)-state.offsetY),state.offsetY,0,size.lines-1)            
         userInput = input(INPUT_LABEL[state.mode])
-        state.handle(userInput)
+        state.update(userInput)
         
     state.close()    
     abstract.clear()
