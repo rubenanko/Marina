@@ -1,10 +1,11 @@
 import sys
 import time
+import os
 from openai import OpenAI
 
 import abstract
 import ui
-# import configparser
+import configparser
 
 CONFIG_MODE = 0
 EDITING_MODE = 1
@@ -23,9 +24,14 @@ class State:
     def __init__(self,filename : str = None):
         self.run = True
         self.offsetY = 0
-        self.config = None
+
+        #loading config.ini
+        self.configPath = os.path.split(os.path.realpath(__file__))[0] + "\\config.ini"
+        self.config = configparser.ConfigParser()
+        self.config.read(self.configPath)
+
         self.mode = EDITING_MODE
-        self.client = OpenAI(api_key="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")
+        self.client = OpenAI(api_key=self.config["API"]["Token"])
         self.askMessages = [{"role": "system", "content": ASKING_PREPROMPT}]
         self.editMessages =  [{"role": "system", "content": EDITING_PREPROMPT}]
 
