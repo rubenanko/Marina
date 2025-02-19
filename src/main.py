@@ -25,8 +25,8 @@ class State:
         self.run = True
         self.offsetY = 0
 
-        #loading config.ini
-        self.configPath = os.path.split(os.path.realpath(__file__))[0] + "\\config.ini"
+        # loading config.ini
+        self.configPath = os.path.split(os.path.realpath(__file__))[0] + "\\..\\config.ini"
         self.config = configparser.ConfigParser()
         self.config.read(self.configPath)
 

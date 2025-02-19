@@ -1,6 +1,3 @@
-def test(begin,end):
-    for i in range(begin,end):
-        print(i)
+import os
 
-test(int(input("begin : ")),10)
-test(int(input("begin : ")),10)
+print(os.path.split(os.path.realpath(__file__))[0])
