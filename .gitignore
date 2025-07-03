@@ -1,2 +1,4 @@
 venv
 myconfig.ini
+src/__pycache__
+src/abstract/__pycache__

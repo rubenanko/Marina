@@ -26,7 +26,10 @@ class State:
         self.offsetY = 0
 
         # loading config.ini
-        self.configPath = os.path.split(os.path.realpath(__file__))[0] + "\\..\\config.ini"
+        if sys.platform == "win32": self.configPath = os.path.split(os.path.realpath(__file__))[0] + "\\..\\config.ini"
+        elif sys.platform == "linux": self.configPath = os.path.split(os.path.realpath(__file__))[0] + "/../config.ini"
+        else:   sys.exit("Marina error : Unknown operating system")
+
         self.config = configparser.ConfigParser()
         self.config.read(self.configPath)
 
